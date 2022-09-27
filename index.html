@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>A Basic HTML5 Template</title>
+    <meta name="description" content="A simple HTML5 Template for new projects." />
+    <meta name="author" content="SitePoint" />
+
+    <meta property="og:title" content="A Basic HTML5 Template" />
+    <meta property="og:type" content="website" />
+    <meta property="og:description" content="A simple HTML5 Template for new projects." />
+</head>
+
+<body>
+    <form>
+        <div>
+            <label for="width">Image width</label>
+            <input id="width" name="width" type="number" step="10" min="10" value="300" />
+        </div>
+        <div>
+            <label for="height">Image height</label>
+            <input id="height" name="height" type="number" step="10" min="10" value="300" />
+        </div>
+        <div>
+            <label for="border">Border</label>
+            <input id="border" name="border" type="number" step="1" min="0" value="15" />
+        </div>
+        <div>
+            <label for="samples">Number of samples</label>
+            <input id="samples" name="samples" type="number" step="1" min="2" value="100" />
+        </div>
+        <div>
+            <label for="min">Minimum deviation</label>
+            <input id="min" name="min" type="number" step="0.1" min="0" value="2.5" />
+        </div>
+        <div>
+            <label for="max">Maximum deviation</label>
+            <input id="max" name="max" type="number" step="0.1" min="0" value="2.7" />
+        </div>
+        <div>
+            <label for="startColor">Start color</label>
+            <input type="text" id="startColor" name="startColor" value="#000000ff">
+        </div>
+        <div>
+            <label for="endColor">End color</label>
+            <input type="text" id="endColor" name="endColor" value="#00000033">
+        </div>
+        <div>
+            <label for="backgroundColor">Background color</label>
+            <input type="text" id="backgroundColor" name="backgroundColor" value="#FFF8DC">
+        </div>
+    </form>
+    <div>
+        Right-click canvas and save as image
+    </div>
+    <canvas id="canvas" width="1200" height="1200"></canvas>
+    <!-- your content here... -->
+    <script type="application/javascript">
+        function update() {
+            let border = +document.getElementById("border").value;
+            let samples = +document.getElementById("samples").value;
+            let min = +document.getElementById("min").value;
+            let max = +document.getElementById("max").value;
+            let width = +document.getElementById("width").value;
+            let height = +document.getElementById("height").value;
+            let startColor = document.getElementById("startColor").value;
+            let endColor = document.getElementById("endColor").value;
+            let backgroundColor = document.getElementById("backgroundColor").value;
+
+            draw(border, samples, min, max, width, height, startColor, endColor, backgroundColor);
+        }
+
+        document.getElementById("border").addEventListener("change", update);
+        document.getElementById("samples").addEventListener("change", update);
+        document.getElementById("min").addEventListener("change", update);
+        document.getElementById("max").addEventListener("change", update);
+        document.getElementById("width").addEventListener("change", update);
+        document.getElementById("height").addEventListener("change", update);
+        document.getElementById("startColor").addEventListener("change", update);
+        document.getElementById("endColor").addEventListener("change", update);
+        document.getElementById("backgroundColor").addEventListener("change", update);
+
+        function randomBetween(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        function draw(border, samples, min, max, width, height, startColor, endColor, backgroundColor) {
+            let minDist = (height - 2 * border) / (samples - 1);
+            // let points = new Array(width);
+            // for (var i = 0; i < points.length; i++) {
+            //     points[i] = new Array(samples);
+            // }
+
+            let points = [];
+            for (let horizontal = 0; horizontal < width; horizontal++) {
+                if (horizontal > 0) {
+                    let maxInHorizontal = Math.max(...points[horizontal - 1]);
+                    console.log(horizontal + maxInHorizontal + border);
+                    if (horizontal + maxInHorizontal + border >= width - border) break;
+                }
+
+                points.push(new Array(samples));
+                for (let vertical = 0; vertical < samples; vertical++) {
+                    let reference = 0;
+                    if (horizontal > 0) {
+                        reference = points[horizontal - 1][vertical];
+                    }
+
+                    points[horizontal][vertical] = reference + randomBetween(min, max);
+                }
+            }
+
+            const canvas = document.getElementById("canvas");
+            if (canvas.getContext) {
+                const ctx = canvas.getContext("2d");
+                canvas.width = width;
+                canvas.height = height;
+
+                ctx.fillStyle = backgroundColor;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                var gradient = ctx.createLinearGradient(border, 0, 0, height - 2 * border);
+                gradient.addColorStop(0, startColor);
+                gradient.addColorStop(1, endColor);
+
+                points.forEach((column, columnIndex) => {
+                    ctx.beginPath();
+                    ctx.strokeStyle = gradient;
+                    ctx.moveTo(columnIndex + column[0] + border, 0 + border);
+                    column.forEach((vElement, vIndex) => {
+                        let x = columnIndex + vElement + border;
+                        let y = vIndex * minDist + border;
+                        ctx.lineTo(x, y);
+                        // var xc = (points[i].x + points[i + 1].x) / 2;
+                        // var yc = (points[i].y + points[i + 1].y) / 2;
+                        // ctx.quadraticCurveTo(hIndex + vElement, vIndex * minDist, (hIndex + vElement), (vIndex * minDist));
+                    });
+                    ctx.stroke();
+                });
+            }
+        }
+
+        update();
+    </script>
+</body>
+
+</html>
